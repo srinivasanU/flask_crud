@@ -35,7 +35,7 @@ def contacts(contact_id=None,method=None):
                     contact = i
             return render_template('contacts.html',contacts=contacts,contact=contact)
         elif (method == 'delete'):
-            cur.execute("DELETE FROM contacts WHERE contact_id = %s" , (contact_id));
+            cur.execute("DELETE FROM contacts WHERE contact_id = " + contact_id);
             conn.commit();
             return redirect(url_for('contacts'))
         else:
