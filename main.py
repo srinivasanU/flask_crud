@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request , redirect , url_for
 from db import dbconnection
 from conversion import get_dict_resultset
+import pandas as pd
 
 conn = dbconnection()
 cur = conn.cursor()
@@ -51,6 +52,25 @@ def update_contacts():
     cur.execute("update contacts SET firstname = %s , lastname = %s , phone_no = %s  WHERE contact_id = %s" , (firstname,lastname,phone_no,contact_id));
     conn.commit();
     return redirect(url_for('contacts'))  
+
+@app.route('/contacts/export', methods=['GET','POST'])
+def export_data():
+    sql = "select firstname,lastname,phone_no from contacts";
+    contacts = get_dict_resultset(sql)
+    df = pd.DataFrame(contacts)
+    df.to_excel (r'exportdbdata.xlsx', index = False, header=True) 
+    return redirect(url_for('contacts'))
+
+@app.route('/contacts/import', methods=['GET','POST'])
+def import_data():
+    filedata = request.form['importexcel']
+    re = pd.read_excel(str(filedata), sheet_name='Sheet1')
+    final_res = re.to_dict('records')
+    for row in final_res:
+        cur.execute("insert into contacts (lastname,phone_no,firstname) values(%s,%s,%s)",(str(row['lastname']),str(row['phone_no']),str(row['firstname'])));
+    conn.commit()
+    return redirect(url_for('contacts'))
+
         
 if __name__ == '__main__':
     app.run()
